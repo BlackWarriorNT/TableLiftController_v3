@@ -1,0 +1,80 @@
+html, body {margin: 0px; padding: 0px; min-height: 100%; border: 0; color: #fff;}
+body {background: -webkit-linear-gradient(45deg, #292929 25%, transparent 25%, transparent 75%, #292929 75%),
+    -webkit-linear-gradient(45deg, #292929 25%, transparent 25%, transparent 75%, #292929 75%) 0.1875em 0.1875em,
+    -webkit-radial-gradient(at 50% 0, #484847, #090909);
+    background: linear-gradient(45deg, #292929 25%, transparent 25%, transparent 75%, #292929 75%),
+    linear-gradient(45deg, #292929 25%, transparent 25%, transparent 75%, #292929 75%) 0.1875em 0.1875em, radial-gradient(at 50% 0, #484847, #090909);
+    background-size: 0.375em 0.375em, 0.375em 0.375em, 100% 100%;}
+.contentMain {border: 2px solid black; background-color: rgba(0, 0, 0, 0.5);
+            margin: auto;width: 640; border-radius: 10px; margin:0 auto; padding: 0px; border-spacing: 10px;
+            position: absolute; top: 50%; left: 50%; transform: translateX(-50%) translateY(-50%);
+}
+.tableH {text-align: left; padding-left: 20px;}
+.header {font-weight:bold; color: rgb(253,194,91); font-size:100%;}
+td {text-align: center; vertical-align: middle; border-radius: 10px;}
+@keyframes glowing {0% {color: rgb(0, 249, 254);} 50% {color: rgb(68, 203, 206);} 100% {color: rgb(0, 249, 254)}}
+button:hover, input:hover {box-shadow: 0 8px 16px 0 rgba(105,28,21,0.2), 0 6px 20px 0 rgba(105,28,21,0.19);}
+button:active, input:active {background-color: rgba(200, 40, 40, 0.76); box-shadow: 0 5px rgba(105,28,21,0.2); transform: translateY(4px);}
+.btnArrow {width: 100px; font-weight:bold; color: rgb(253,194,91); background-color: black; font-size:400%; border-radius: 50px; border: 2px solid black;}
+.btnSelect {width: 140px; font-weight:bold; color: rgb(253,194,91); background-color: black; font-size:125%; border-radius: 50px; border: 2px solid black;}
+.heightInfo {animation: glowing 1300ms infinite; border: 1px solid black; padding: 10px; margin: 10px; color: rgb(0, 249, 254); background-color: rgba(0, 122, 125, 0.1); font-size: 750%;}
+.paramName {padding-left: 10px; color: rgb(0, 249, 254); font-size: 120%; text-align: left;}
+input {font-weight: 700; color: rgb(0, 249, 254); background-color: rgb(9, 7, 21); border: 1px solid black}
+.panelMain {display: grid;
+    grid-template-columns: 1fr 1fr 150px;
+    grid-template-rows: 0.25fr 1fr 1fr 0.5fr;
+    gap: 10px 0px;
+    grid-auto-flow: row;
+    grid-template-areas:
+        "dev_uptime dev_title dev_info"
+        "dev_curHeight dev_curHeight buttonUp"
+        "dev_curHeight dev_curHeight buttonDown"
+        "dev_modes dev_modes buttonConfig";
+}
+.dev_uptime {grid-area: dev_uptime;}
+.dev_title {grid-area: dev_title;}
+.dev_info {grid-area: dev_info;}
+.dev_curHeight {grid-area: dev_curHeight;}
+.buttonUp {grid-area: buttonUp;}
+.buttonDown {grid-area: buttonDown;}
+.dev_modes {grid-area: dev_modes;}
+.buttonConfig {grid-area: buttonConfig;}
+.centerContent {justify-content: space-evenly; align-items: center; display: flex;}
+.form {display: grid; margin-top: 10px;
+    grid-template-columns: 180px auto;
+    grid-template-rows: 40px auto auto 40px auto auto auto auto auto 40px;
+    gap: 4px 0px;
+    grid-auto-flow: row;
+    grid-template-areas:
+      "configHeader1 configHeader1empty"
+      "ssid ssid_value"
+      "psk psk_value"
+      "configHeader2 configHeader2empty"
+      "hMin hMin_value"
+      "hMax hMax_value"
+      "mode1 mode1_value"
+      "mode2 mode2_value"
+      "hOffset hOffset_value"
+      "empty buttonSave";
+      width: 500px;
+  }
+  .configHeader1 { grid-area: configHeader1; }
+  .configHeader1empty { grid-area: configHeader1empty; }
+  .ssid { grid-area: ssid; }
+  .ssid_value { grid-area: ssid_value; }
+  .psk { grid-area: psk; }
+  .psk_value { grid-area: psk_value; }
+  .configHeader2 { grid-area: configHeader2; }
+  .configHeader2empty { grid-area: configHeader2empty; }
+  .hMin { grid-area: hMin; }
+  .hMin_value { grid-area: hMin_value; }
+  .hMax { grid-area: hMax; }
+  .hMax_value { grid-area: hMax_value; }
+  .mode1 { grid-area: mode1; }
+  .mode1_value { grid-area: mode1_value; }
+  .mode2 { grid-area: mode2; }
+  .mode2_value { grid-area: mode2_value; }
+  .hOffset { grid-area: hOffset; }
+  .hOffset_value { grid-area: hOffset_value; }
+  .empty { grid-area: empty; }
+  .buttonSave { grid-area: buttonSave; }
