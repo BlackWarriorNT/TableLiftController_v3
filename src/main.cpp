@@ -1,10 +1,10 @@
 #include <Arduino.h>
-#include <ESP8266WiFi.h>
-#include <WiFiClient.h>
-#include <ESP8266WebServer.h>
-#include <ESP8266HTTPUpdateServer.h>
-#include <LittleFS.h> // https://www.mischianti.org/2020/06/22/wemos-d1-mini-esp8266-integrated-littlefs-filesystem-part-5/ , https://www.hackster.io/Neutrino-1/littlefs-read-write-delete-using-esp8266-and-arduino-ide-867180
 #include <ArduinoJson.h>
+#include <FS.h>
+#include <LittleFS.h>
+#include <ESP8266WiFi.h>
+#include <ESPAsyncTCP.h>
+#include <ESPAsyncWebServer.h>
 
 #define trigPin 13
 #define echoPin 12
@@ -26,8 +26,8 @@ unsigned int distance, getDistancePeriod = 100, hOffset = 0, hMode1 = 550, hMode
 unsigned long distanceLastTime, uptimeLastTime, snowInfoLastTime;
 
 ADC_MODE(ADC_VCC);
-ESP8266WebServer httpServer(80);
-ESP8266HTTPUpdateServer httpUpdater;
+AsyncWebServer httpServer(80);
+//ESP8266HTTPUpdateServer httpUpdater;
 
 unsigned int getDistance();
 String getUptime();
@@ -70,7 +70,10 @@ void setLiftMin();
 void setLiftMax();
 void setLiftMode1();
 void setLiftMode2();
-void handleReboot() {httpServer.send(200, "text/html", HTML_reboot); delay(500); ESP.reset();}
+void handleReboot() {
+  //httpServer.send(200, "text/html", HTML_reboot);
+  delay(500); ESP.reset();
+  }
 void handleGenericArgs();
 
 void handleJSON() {
@@ -82,13 +85,21 @@ void handleJSON() {
   json+= String("hOffset:") + String(hOffset) + String(";");
   json+= String("vcc:") + String(getVCC()) + String(";");
   Serial.println(json);
-  httpServer.send(200, "text/plain", json);
+  //httpServer.send(200, "text/plain", json);
   }
 
-void curUptime() {httpServer.send(200, "text/plane", getUptime());}
-void curVCC() {httpServer.send(200, "text/plane", String(getVCC()));}
-void curHeight() {httpServer.send(200, "text/plane", String(distance*0.1, 1));}
-void curRSSI() {httpServer.send(200, "text/plane", String(WiFi.RSSI()));}
+void curUptime() {
+  //httpServer.send(200, "text/plane", getUptime());
+  }
+void curVCC() {
+  //httpServer.send(200, "text/plane", String(getVCC()));
+  }
+void curHeight() {
+  //httpServer.send(200, "text/plane", String(distance*0.1, 1));
+  }
+void curRSSI() {
+  //httpServer.send(200, "text/plane", String(WiFi.RSSI()));
+  }
 
 void setup() {
   pinMode(moveUp, OUTPUT);
@@ -131,6 +142,16 @@ void setup() {
   wifiSSID = WiFi.SSID(); wifiPSK = WiFi.psk();
   Serial.print(F("IP address: ")); Serial.println(WiFi.localIP());
 
+    // Route for root / web page
+  httpServer.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(LittleFS, "/index.html", "text/html");
+  });
+  
+  // Route to load style.css file
+  httpServer.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(LittleFS, "/style.css", "text/css");
+  });
+  /*
   httpServer.on("/", handleRoot);
   httpServer.on("/config", handleConfig);
   httpServer.on("/reboot", handleReboot);
@@ -146,13 +167,14 @@ void setup() {
     httpServer.on("/vccread", curVCC);
     httpServer.on("/height", curHeight);
     httpServer.on("/rssi", curRSSI);
+  */
   httpServer.begin();
-  httpUpdater.setup(&httpServer);
+  //httpUpdater.setup(&httpServer);
   handleJSON();
 }
 
 void loop() {
-  httpServer.handleClient();
+  //httpServer.handleClient();
   if (needMove == true) {
     if (hNeed > distance) {
       Serial.print(F("Moving up to: ")); Serial.print(String(hNeed)); Serial.print(F(", now: ")); Serial.println(String(distance));
@@ -213,33 +235,34 @@ unsigned int getDistance () {
 
 
 void setLift() {
-  hNeed = httpServer.arg("height").toInt();
-  httpServer.send(200, "text/html", HTML_main);
+  //hNeed = httpServer.arg("height").toInt();
+  //httpServer.send(200, "text/html", HTML_main);
   needMove = true;
 }
 void setLiftMin() {
   hNeed = hMin;
-  //httpServer.send(200, "text/html", HTML_main);
+  ////httpServer.send(200, "text/html", HTML_main);
   needMove = true;
 }
 void setLiftMax() {
   hNeed = hMax;
-  //httpServer.send(200, "text/html", HTML_main);
+  ////httpServer.send(200, "text/html", HTML_main);
   needMove = true;
 }
 void setLiftMode1() {
   hNeed = hMode1;
-  //httpServer.send(200, "text/html", HTML_main);
+  ////httpServer.send(200, "text/html", HTML_main);
   needMove = true;
 }
 void setLiftMode2() {
   hNeed = hMode2;
-  //httpServer.send(200, "text/html", HTML_main);
+  ////httpServer.send(200, "text/html", HTML_main);
   needMove = true;
 }
 
 void moveLift() {
-  int val = httpServer.arg("height").toInt();
+  int val = 5;
+  //int val = httpServer.arg("height").toInt();
   if (val > 0) {
     digitalWrite(moveDown, LOW);
     digitalWrite(moveUp, HIGH);
@@ -324,7 +347,7 @@ void handleRoot() {
 "}"
 "</script>"
 "</html>";
-  httpServer.send(200, "text/html", HTML_main);
+  //httpServer.send(200, "text/html", HTML_main);
   }
 
 void handleConfig() {
@@ -388,7 +411,7 @@ void handleConfig() {
   "</td></tr></table>"
 "</body>"
 "</html>";
-  httpServer.send(200, "text/html", HTML_config);
+  //httpServer.send(200, "text/html", HTML_config);
   }
 
 void configRead() {
@@ -452,6 +475,7 @@ void configWrite() {
 }
 
 void handleGenericArgs() {
+  /*
   for (byte i = 0;i < httpServer.args()-1;i++) {
     String stringTemp;
     if (httpServer.argName(i) == "wifiSSID" && httpServer.arg(i) != "") {
@@ -479,4 +503,5 @@ void handleGenericArgs() {
   configWrite();
   delay(250);
   handleReboot();
+  */
 }
