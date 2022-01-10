@@ -2,22 +2,24 @@
     <head>
         <meta http-equiv='content-type' content='text/html; charset=utf-8'>
         <link rel="stylesheet" type="text/css" href="styles.css">
+        <link rel="icon" type="image/png" href="favico16.png" sizes="16x16" />
+        <link rel="icon" type="image/png" href="favico32.png" sizes="32x32" />
     </head>
 <body>
     <div class="panelMain contentMain">
         <div class="dev_uptime header">
-            <span style="float:left; font-size: 75%; vertical-align: top; padding: 5px;">
-                Время работы<br><span id="uptime">07:30</span>
+            <span style="float:left; font-size: 75%%; vertical-align: top; padding: 5px;">
+                Время работы<br><span id="uptime">%WTIME%</span>
             </span>
         </div>
-        <div class="dev_title header"><span style="font-size: 200%;">Умный стол</span></div>
+        <div class="dev_title header"><span style="font-size: 200%%;">Умный стол</span></div>
         <div class="dev_info header">
-            <span style="float:right; font-size: 75%; vertical-align: top; padding: 5px;">
-                RSSI:&nbsp;<span id="rssi">-33dBi</span><br>
-                VCC:&nbsp;<span id="vcc">3.00V</span>
+            <span style="float:right; font-size: 75%%; vertical-align: top; padding: 5px;">
+                <span id="rssi">%RSSI%</span>&nbsp;dBi<br>
+                <span id="vcc">%VCC%</span>&nbsp;V
             </span>
         </div>
-        <div class="dev_curHeight heightInfo">999.9 cm</div>
+        <div class="dev_curHeight heightInfo">%HEIGHT% cm</div>
         <div class="buttonUp centerContent"><button class="btnArrow">&#129145;</button></div>
         <div class="buttonDown centerContent"><button class="btnArrow">&#129147;</button></div>
         <div class="dev_modes centerContent">
@@ -26,14 +28,16 @@
             <div><a href="setLiftMode2"><button class="btnSelect">Режим&nbsp;2</button></a></div>
             <div><a href="setLiftMax"><button class="btnSelect" style="width: 40px;">&#10514;</button></a></div>
         </div>
-        <div class="buttonConfig centerContent"><a href="config.html"></a><button class="btnSelect">Настройки</button></a></div>
+        <div class="buttonConfig centerContent"><a href="config.html"><button class="btnSelect">Настройки</button></a></div>
     </div>
 </body>
 </html>
 <script>
     window.onload = function() {
-        var esp8266json = JSON.parse(httpGet('http://192.168.0.251/json'));
-        console.log(esp8266json);
+        console.log("Page Loaded");
+        //var esp8266json = JSON.parse(httpGet('http://192.168.0.251/json'));
+        //var esp8266json = JSON.parse(httpGet('/json'));
+        //console.log(esp8266json);
     };
     function httpGet(theUrl, callback) {
         var xmlHttp = new XMLHttpRequest();

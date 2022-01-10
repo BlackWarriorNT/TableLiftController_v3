@@ -43,7 +43,17 @@ void configRead();
 void configWrite();
 
 String processor(const String& var) {
-  Serial.println(var);
+  if (var == "WTIME") {return (getUptime());}
+  if (var == "RSSI") {return (String(WiFi.RSSI()));}
+  if (var == "VCC") {return (String(getVCC()));}
+  if (var == "HEIGHT") {return (String(distance*0.1, 1));}
+  if (var == "wifiSSID") {return (wifiSSID);}
+  if (var == "wifiPSK") {return (wifiPSK);}
+  if (var == "hMin") {return (String(hMin));}
+  if (var == "hMax") {return (String(hMax));}
+  if (var == "hMode1") {return (String(hMode1));}
+  if (var == "hMode2") {return (String(hMode2));}
+  if (var == "hOffset") {return (String(hOffset));}
   return String();
 }
 
@@ -54,10 +64,12 @@ void setLiftMin();
 void setLiftMax();
 void setLiftMode1();
 void setLiftMode2();
+/*
 void handleReboot() {
   //httpServer.send(200, "text/html", HTML_reboot);
   delay(500); ESP.reset();
   }
+*/
 void handleGenericArgs();
 
 void handleJSON() {
@@ -108,23 +120,7 @@ void setup() {
   } else {
     Serial.println(F("fail."));
   }
-
-Dir dir = LittleFS.openDir("/");
-    // Cycle all the content
-    while (dir.next()) {
-        // get filename
-        Serial.print(dir.fileName());
-        Serial.print(" - ");
-        // If element have a size display It else write 0
-        if(dir.fileSize()) {
-            File f = dir.openFile("r");
-            Serial.println(f.size());
-            f.close();
-        }else{
-            Serial.println("0");
-        }
-    }
-delay(5000);
+  
   WiFi.persistent(false);
   WiFi.mode(WIFI_AP_STA);
   WiFi.setAutoConnect(true);
@@ -142,15 +138,32 @@ delay(5000);
   wifiSSID = WiFi.SSID(); wifiPSK = WiFi.psk();
   Serial.print(F("IP address: ")); Serial.println(WiFi.localIP());
 
-    // Route for root / web page
   httpServer.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(LittleFS, "/index.html", "text/html");
+    request->send(LittleFS, "/index.html", "text/html", false, processor);
   });
-  
-  // Route to load style.css file
-  httpServer.on("/styles.css", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(LittleFS, "/styles.css", "text/css");
+
+  httpServer.on("/config.html", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(LittleFS, "/config.html", "text/html", false, processor);
   });
+
+  httpServer.on("/reboot", HTTP_GET, [](AsyncWebServerRequest *request) {
+    ESP.reset();
+  });
+
+  /*
+  httpServer.on("/reboot.html", HTTP_GET, []() {
+    request->send(LittleFS, "/reboot.html", "text/html");
+    delay(500);
+    ESP.reset();
+  });
+  */
+  httpServer.serveStatic("/styles.css", LittleFS, "/styles.css");
+  httpServer.serveStatic("/favicon.ico", LittleFS, "/favicon.ico");
+  httpServer.serveStatic("/favico16.png", LittleFS, "/favico16.png");
+  httpServer.serveStatic("/favico32.png", LittleFS, "/favico32.png");
+  //httpServer.serveStatic("/reboot.html", LittleFS, "/reboot.html");
+
+  DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
   httpServer.begin();
 }
 

@@ -78,3 +78,5 @@ input {font-weight: 700; color: rgb(0, 249, 254); background-color: rgb(9, 7, 21
   .hOffset_value { grid-area: hOffset_value; }
   .empty { grid-area: empty; }
   .buttonSave { grid-area: buttonSave; }
+
+

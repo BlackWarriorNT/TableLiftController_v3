@@ -2,43 +2,45 @@
     <head>
         <meta http-equiv="content-type" content="text/html; charset=utf-8">
         <link rel="stylesheet" type="text/css" href="styles.css">
+        <link rel="icon" type="image/png" href="favico16.png" sizes="16x16" />
+        <link rel="icon" type="image/png" href="favico32.png" sizes="32x32" />
     </head>
     <title>Настройки</title>
 <body>
     <div class="contentMain">
         <form action="" method="post" class="centerContent">
             <div class="form centerContent">
-                <div class="configHeader1 header" style="font-size: 125%;">Настройки Wi-Fi</div>
+                <div class="configHeader1 header" style="font-size: 125%%;">Настройки Wi-Fi</div>
                 <div class="configHeader1empty"></div>
                 <div class="ssid paramName">SSID</div>
                 <div class="ssid_value">
-                    <input type="text" name="wifiSSID" maxlength="32" size="32" placeholder="wifiSSID">
+                    <input type="text" name="wifiSSID" maxlength="32" size="32" placeholder="%wifiSSID%">
                 </div>
                 <div class="psk paramName">key</div>
                 <div class="psk_value">
-                    <input type="text" name="wifiPSK" maxlength="32" size="32" placeholder="wifiPSK">
+                    <input type="text" name="wifiPSK" maxlength="32" size="32" placeholder="%wifiPSK%">
                 </div>
-                <div class="configHeader2 header" style="font-size: 125%;">Настройки высоты</div>
+                <div class="configHeader2 header" style="font-size: 125%%;">Настройки высоты</div>
                 <div class="configHeader2empty"></div>
                 <div class="hMin paramName">Минимальная</div>
                 <div class="hMin_value">
-                    <input type="text" name="hMin" maxlength="5" size="32" min="1" max="2000" step="1" placeholder="hMin">
+                    <input type="text" name="hMin" maxlength="5" size="32" min="1" max="2000" step="1" placeholder="%hMin%">
                 </div>
                 <div class="hMax paramName">Максимальная</div>
                 <div class="hMax_value">
-                    <input type="text" name="hMax" maxlength="5" size="32" min="1" max="2000" step="1" placeholder="hMax">
+                    <input type="text" name="hMax" maxlength="5" size="32" min="1" max="2000" step="1" placeholder="%hMax%">
                 </div>
                 <div class="mode1 paramName">Режим №1</div>
                 <div class="mode1_value">
-                    <input type="text" name="hMode1" maxlength="5" size="32" min="1" max="2000" step="1" placeholder="hMode1">
+                    <input type="text" name="hMode1" maxlength="5" size="32" min="1" max="2000" step="1" placeholder="%hMode1%">
                 </div>
                 <div class="mode2 paramName">Режим №2</div>
                 <div class="mode2_value">
-                    <input type="text" name="hMode2" maxlength="5" size="32" min="1" max="2000" step="1" placeholder="hMode2">
+                    <input type="text" name="hMode2" maxlength="5" size="32" min="1" max="2000" step="1" placeholder="%hMode2%">
                 </div>
                 <div class="hOffset paramName">Поправка на высоту</div>
                 <div class="hOffset_value">
-                    <input type="text" name="hOffset" maxlength="5" size="32" min="1" max="2000" step="1" placeholder="hOffset">
+                    <input type="text" name="hOffset" maxlength="5" size="32" min="1" max="2000" step="1" placeholder="%hOffset%">
                 </div>
                 <div class="empty"></div>
                 <div class="buttonSave">
@@ -47,7 +49,7 @@
               </div>
         </form>
         <div class="centerContent" style="margin-bottom: 10px;">
-            <a href="index.html"><button class="btnSelect" style="width: 250px;">Главная страница</button></a>
+            <a href="/"><button class="btnSelect" style="width: 250px;">Главная страница</button></a>
             <a><button class="btnSelect" style="width: 250px;">Обновить прошивку</button></a>
         </div>
     </div>
