@@ -1,6 +1,7 @@
 // https://www.mischianti.org/2020/06/22/wemos-d1-mini-esp8266-integrated-littlefs-filesystem-part-5/
 // https://voltiq.ru/esp32-esp8266-web-server-physical-button/
 // https://microcontrollerslab.com/esp8266-nodemcu-web-server-using-littlefs-flash-file-system/
+// https://randomnerdtutorials.com/esp8266-web-server-spiffs-nodemcu/
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
@@ -60,10 +61,12 @@ String processor(const String& var) {
 void handleRoot();
 void handleConfig();
 void setLift();
+/*
 void setLiftMin();
 void setLiftMax();
 void setLiftMode1();
 void setLiftMode2();
+*/
 /*
 void handleReboot() {
   //httpServer.send(200, "text/html", HTML_reboot);
@@ -84,19 +87,6 @@ void handleJSON() {
   //httpServer.send(200, "text/plain", json);
   }
 
-void curUptime() {
-  //httpServer.send(200, "text/plane", getUptime());
-  }
-void curVCC() {
-  //httpServer.send(200, "text/plane", String(getVCC()));
-  }
-void curHeight() {
-  //httpServer.send(200, "text/plane", String(distance*0.1, 1));
-  }
-void curRSSI() {
-  //httpServer.send(200, "text/plane", String(WiFi.RSSI()));
-  }
-
 void setup() {
   pinMode(moveUp, OUTPUT);
   pinMode(moveDown, OUTPUT);
@@ -108,14 +98,14 @@ void setup() {
   Serial.begin(115200);
   Serial.setTimeout(0);
   Serial.println();
-  Serial.println(F("Table Lift Controller (ver.3) loaded"));
+  Serial.println(F("Table Lift Controller (ver.3.5) loaded"));
     Serial.print(F("\tFirmware builded: "));
     Serial.print(String(__DATE__)); 
     Serial.print(F(", "));
     Serial.println(String(__TIME__));
 
   if (LittleFS.begin()) {
-    Serial.println(F("LittleFS.begin")); delay(250);
+    Serial.println(F("LittleFS.begin"));
     configRead();
   } else {
     Serial.println(F("fail."));
@@ -150,6 +140,33 @@ void setup() {
     ESP.reset();
   });
 
+  httpServer.on("/uptime", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send_P(200, "text/plain", getUptime().c_str());
+    });
+  httpServer.on("/rssi", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send_P(200, "text/plain", String(WiFi.RSSI()).c_str());
+    });
+  httpServer.on("/vcc", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send_P(200, "text/plain", String(getVCC()).c_str());
+    });
+  httpServer.on("/height", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send_P(200, "text/plain", String(distance*0.1,1).c_str());
+    });
+
+  httpServer.on("/setLiftMin", HTTP_GET, [](AsyncWebServerRequest *request) {
+    hNeed = hMin; needMove = true;
+  });
+  httpServer.on("/setLiftMax", HTTP_GET, [](AsyncWebServerRequest *request) {
+    hNeed = hMax; needMove = true;
+  });
+  httpServer.on("/setLiftMode1", HTTP_GET, [](AsyncWebServerRequest *request) {
+    hNeed = hMode1; needMove = true;
+  });
+  httpServer.on("/setLiftMode2", HTTP_GET, [](AsyncWebServerRequest *request) {
+    hNeed = hMode2; needMove = true;
+  });
+
+
   /*
   httpServer.on("/reboot.html", HTTP_GET, []() {
     request->send(LittleFS, "/reboot.html", "text/html");
@@ -157,11 +174,11 @@ void setup() {
     ESP.reset();
   });
   */
-  httpServer.serveStatic("/styles.css", LittleFS, "/styles.css");
-  httpServer.serveStatic("/favicon.ico", LittleFS, "/favicon.ico");
+  httpServer.serveStatic("/styles.css",   LittleFS, "/styles.css");
+  httpServer.serveStatic("/favicon.ico",  LittleFS, "/favicon.ico");
   httpServer.serveStatic("/favico16.png", LittleFS, "/favico16.png");
   httpServer.serveStatic("/favico32.png", LittleFS, "/favico32.png");
-  //httpServer.serveStatic("/reboot.html", LittleFS, "/reboot.html");
+  httpServer.serveStatic("/favic180.png", LittleFS, "/favic180.png");
 
   DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
   httpServer.begin();
@@ -230,26 +247,6 @@ unsigned int getDistance () {
 void setLift() {
   //hNeed = httpServer.arg("height").toInt();
   //httpServer.send(200, "text/html", HTML_main);
-  needMove = true;
-}
-void setLiftMin() {
-  hNeed = hMin;
-  ////httpServer.send(200, "text/html", HTML_main);
-  needMove = true;
-}
-void setLiftMax() {
-  hNeed = hMax;
-  ////httpServer.send(200, "text/html", HTML_main);
-  needMove = true;
-}
-void setLiftMode1() {
-  hNeed = hMode1;
-  ////httpServer.send(200, "text/html", HTML_main);
-  needMove = true;
-}
-void setLiftMode2() {
-  hNeed = hMode2;
-  ////httpServer.send(200, "text/html", HTML_main);
   needMove = true;
 }
 

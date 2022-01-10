@@ -2,8 +2,9 @@
     <head>
         <meta http-equiv='content-type' content='text/html; charset=utf-8'>
         <link rel="stylesheet" type="text/css" href="styles.css">
-        <link rel="icon" type="image/png" href="favico16.png" sizes="16x16" />
-        <link rel="icon" type="image/png" href="favico32.png" sizes="32x32" />
+        <link rel="icon" type="image/png" href="favico16.png" sizes="16x16">
+        <link rel="icon" type="image/png" href="favico32.png" sizes="32x32">
+        <link rel="apple-touch-icon" href="favic180.png">
     </head>
 <body>
     <div class="panelMain contentMain">
@@ -19,7 +20,7 @@
                 <span id="vcc">%VCC%</span>&nbsp;V
             </span>
         </div>
-        <div class="dev_curHeight heightInfo">%HEIGHT% cm</div>
+        <div class="dev_curHeight heightInfo"><span id="height">%HEIGHT%</span> cm</div>
         <div class="buttonUp centerContent"><button class="btnArrow">&#129145;</button></div>
         <div class="buttonDown centerContent"><button class="btnArrow">&#129147;</button></div>
         <div class="dev_modes centerContent">
@@ -33,18 +34,22 @@
 </body>
 </html>
 <script>
-    window.onload = function() {
-        console.log("Page Loaded");
-        //var esp8266json = JSON.parse(httpGet('http://192.168.0.251/json'));
-        //var esp8266json = JSON.parse(httpGet('/json'));
-        //console.log(esp8266json);
-    };
-    function httpGet(theUrl, callback) {
-        var xmlHttp = new XMLHttpRequest();
-        xmlHttp.onreadystatechange = function() {
-            if (xmlHttp.readyState == 4 && xmlHttp.status == 200) callback(xmlHttp.responseText);
-        }
-        xmlHttp.open("GET", theUrl, true);
-        xmlHttp.send(null);
+    setInterval( function() {
+        getInfo("uptime");
+        getInfo("height");
+        getInfo("vcc");
+        getInfo("rssi");
+    }, 1000);
+    
+    function getInfo (page) {
+        console.log(page);
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                document.getElementById(page).innerHTML = this.responseText;
+            }
+        };
+        xhttp.open("GET", "/"+page, true);
+        xhttp.send();
     }
 </script>
