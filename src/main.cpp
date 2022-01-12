@@ -10,6 +10,7 @@
 #include <ESP8266WiFi.h>
 #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
+#include <AsyncElegantOTA.h>
 
 #define trigPin 13
 #define echoPin 12
@@ -26,19 +27,18 @@ float expRunningAverage(float newVal) { // бегущее среднее
 }
 
 byte needMove = false;
+byte needReboot = false;
 int8_t liftDirection;
-unsigned int distance, getDistancePeriod = 100, hOffset = 0, hMode1 = 550, hMode2 = 655, hMin = 500, hMax = 750, hNeed;
+unsigned int distance = 550, getDistancePeriod = 100, hOffset = 0, hMode1 = 550, hMode2 = 655, hMin = 500, hMax = 750, hNeed = 550;
 unsigned long distanceLastTime, uptimeLastTime, snowInfoLastTime;
 
 ADC_MODE(ADC_VCC);
 AsyncWebServer httpServer(80);
-//ESP8266HTTPUpdateServer httpUpdater;
 
 unsigned int getDistance();
 String getUptime();
 void snowInfo();
 float getVCC() {return (ESP.getVcc() * 0.001);}
-void moveLift();
 
 void configRead();
 void configWrite();
@@ -58,34 +58,9 @@ String processor(const String& var) {
   return String();
 }
 
-void handleRoot();
-void handleConfig();
-void setLift();
-/*
-void setLiftMin();
-void setLiftMax();
-void setLiftMode1();
-void setLiftMode2();
-*/
-/*
-void handleReboot() {
-  //httpServer.send(200, "text/html", HTML_reboot);
-  delay(500); ESP.reset();
-  }
-*/
-void handleGenericArgs();
-
-void handleJSON() {
-  String json = String("height:") + String(distance) + String(";");
-  json+= String("hMin:") + String(hMin) + String(";");
-  json+= String("hMax:") + String(hMax) + String(";");
-  json+= String("hMode1:") + String(hMode1) + String(";");
-  json+= String("hMode2:") + String(hMode2) + String(";");
-  json+= String("hOffset:") + String(hOffset) + String(";");
-  json+= String("vcc:") + String(getVCC()) + String(";");
-  Serial.println(json);
-  //httpServer.send(200, "text/plain", json);
-  }
+void moveUP () {digitalWrite(moveDown, LOW); digitalWrite(moveUp, HIGH);}
+void moveDOWN () {digitalWrite(moveUp, LOW); digitalWrite(moveDown, HIGH);}
+void moveSTOP () {digitalWrite(moveUp, LOW); digitalWrite(moveDown, LOW);}
 
 void setup() {
   pinMode(moveUp, OUTPUT);
@@ -135,10 +110,14 @@ void setup() {
   httpServer.on("/config.html", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(LittleFS, "/config.html", "text/html", false, processor);
   });
-
   httpServer.on("/reboot", HTTP_GET, [](AsyncWebServerRequest *request) {
     ESP.reset();
   });
+  httpServer.on("/reboot.html", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(LittleFS, "/reboot.html", "text/html", false, processor);
+    needReboot = true;
+  });
+//  httpServer.serveStatic("/",  LittleFS, "/reboot.html");
 
   httpServer.on("/uptime", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send_P(200, "text/plain", getUptime().c_str());
@@ -153,27 +132,63 @@ void setup() {
     request->send_P(200, "text/plain", String(distance*0.1,1).c_str());
     });
 
+  httpServer.on("/saveParams", HTTP_GET, [](AsyncWebServerRequest *request) {
+    String param1 = request->getParam("wifiSSID")->value();
+    String param2 = request->getParam("wifiPSK")->value();
+    String param3 = request->getParam("hMin")->value();
+    String param4 = request->getParam("hMax")->value();
+    String param5 = request->getParam("hMode1")->value();
+    String param6 = request->getParam("hMode2")->value();
+    String param7 = request->getParam("hOffset")->value();
+    if (param1 != "") {wifiSSID = param1;}
+    if (param2 != "") {wifiPSK = param2;}
+    if (param3 != "") {hMin = param3.toInt();}
+    if (param4 != "") {hMax = param4.toInt();}
+    if (param5 != "") {hMode1 = param5.toInt();}
+    if (param6 != "") {hMode2 = param6.toInt();}
+    if (param7 != "") {hOffset = param7.toInt();}
+    configWrite();
+    request->redirect("/reboot.html");
+    needReboot = true;
+  });
+
+  httpServer.on("/moveLift", HTTP_POST, [](AsyncWebServerRequest *request) {
+    String param1 = request->getParam("height")->value();
+    liftDirection = param1.toInt(); needMove = false;
+  });
+  httpServer.on("/setLift", HTTP_GET, [](AsyncWebServerRequest *request) {
+    String param1 = request->getParam("height")->value();
+    hNeed = param1.toInt(); needMove = true;
+    request->send(200, "text/plain", "OK");
+  });
   httpServer.on("/setLiftMin", HTTP_GET, [](AsyncWebServerRequest *request) {
     hNeed = hMin; needMove = true;
+    request->redirect("/");
   });
   httpServer.on("/setLiftMax", HTTP_GET, [](AsyncWebServerRequest *request) {
     hNeed = hMax; needMove = true;
+    request->redirect("/");
   });
   httpServer.on("/setLiftMode1", HTTP_GET, [](AsyncWebServerRequest *request) {
     hNeed = hMode1; needMove = true;
+    request->redirect("/");
   });
   httpServer.on("/setLiftMode2", HTTP_GET, [](AsyncWebServerRequest *request) {
     hNeed = hMode2; needMove = true;
+    request->redirect("/");
   });
 
-
-  /*
-  httpServer.on("/reboot.html", HTTP_GET, []() {
-    request->send(LittleFS, "/reboot.html", "text/html");
-    delay(500);
-    ESP.reset();
+  httpServer.on("/json", HTTP_GET, [](AsyncWebServerRequest *request) {
+    String json = String("height:") + String(distance) + String(";");
+    json+= String("hMin:") + String(hMin) + String(";");
+    json+= String("hMax:") + String(hMax) + String(";");
+    json+= String("hMode1:") + String(hMode1) + String(";");
+    json+= String("hMode2:") + String(hMode2) + String(";");
+    json+= String("hOffset:") + String(hOffset) + String(";");
+    json+= String("vcc:") + String(getVCC()) + String(";");
+    request->send(200, "text/plain", json);
   });
-  */
+
   httpServer.serveStatic("/styles.css",   LittleFS, "/styles.css");
   httpServer.serveStatic("/favicon.ico",  LittleFS, "/favicon.ico");
   httpServer.serveStatic("/favico16.png", LittleFS, "/favico16.png");
@@ -181,26 +196,38 @@ void setup() {
   httpServer.serveStatic("/favic180.png", LittleFS, "/favic180.png");
 
   DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
+  AsyncElegantOTA.begin(&httpServer);
   httpServer.begin();
 }
 
 void loop() {
+  if (needReboot) {delay(500); ESP.reset();}
+  if (needMove == false) {
+  switch (liftDirection) {
+    case 1:
+      moveUP();
+      break;
+    case -1:
+      moveDOWN();
+      break;
+    default:
+      moveSTOP();
+      break;
+  }
+  }
   if (needMove == true) {
     if (hNeed > distance) {
-      Serial.print(F("Moving up to: ")); Serial.print(String(hNeed)); Serial.print(F(", now: ")); Serial.println(String(distance));
-      digitalWrite(moveDown, LOW);
-      digitalWrite(moveUp, HIGH);
+      //Serial.print(F("Moving up to: ")); Serial.print(String(hNeed)); Serial.print(F(", now: ")); Serial.println(String(distance));
+      moveUP();
     }
     if (hNeed < distance) {
-      Serial.print(F("Moving down to: ")); Serial.print(String(hNeed)); Serial.print(F(", now: ")); Serial.println(String(distance));
-      digitalWrite(moveUp, LOW);
-      digitalWrite(moveDown, HIGH);
+      //Serial.print(F("Moving down to: ")); Serial.print(String(hNeed)); Serial.print(F(", now: ")); Serial.println(String(distance));
+      moveDOWN();
     }
     if (hNeed == distance) {
-      Serial.println(F("Moving stoped"));
+      //Serial.println(F("Moving stoped"));
       needMove = false;
-      digitalWrite(moveDown, LOW);
-      digitalWrite(moveUp, LOW);
+      moveSTOP();
     }
   }
   if (millis() - distanceLastTime >= getDistancePeriod) {
@@ -243,28 +270,6 @@ unsigned int getDistance () {
   return (distance + hOffset);
 }
 
-
-void setLift() {
-  //hNeed = httpServer.arg("height").toInt();
-  //httpServer.send(200, "text/html", HTML_main);
-  needMove = true;
-}
-
-void moveLift() {
-  int val = 5;
-  //int val = httpServer.arg("height").toInt();
-  if (val > 0) {
-    digitalWrite(moveDown, LOW);
-    digitalWrite(moveUp, HIGH);
-  } else if (val < 0) {
-    digitalWrite(moveUp, LOW);
-    digitalWrite(moveDown, HIGH);
-  } else {
-    digitalWrite(moveUp, LOW);
-    digitalWrite(moveDown, LOW);
-  }
-}
-
 String getUptime() {
   String uptime = ""; unsigned long time = millis()/1000;
   if (time/60/60<10) {uptime += "0";} uptime += String(time/60/60); uptime += ":";
@@ -272,12 +277,6 @@ String getUptime() {
   if (time%60<10) {uptime += "0";} uptime += String(time%60);
   uptimeLastTime = millis();
   return uptime;
-  }
-
-void handleRoot() {
-  }
-
-void handleConfig() {
   }
 
 void configRead() {
@@ -339,36 +338,4 @@ void configWrite() {
   serializeJson(doc, Serial);
   configFile.close();
   Serial.println();
-}
-
-void handleGenericArgs() {
-  /*
-  for (byte i = 0;i < httpServer.args()-1;i++) {
-    String stringTemp;
-    if (httpServer.argName(i) == "wifiSSID" && httpServer.arg(i) != "") {
-      wifiSSID = httpServer.arg(i);
-    }
-    if (httpServer.argName(i) == "wifiPSK" && httpServer.arg(i) != "") {
-      wifiPSK = httpServer.arg(i);
-    }
-    if (httpServer.argName(i) == "hMin") {
-      stringTemp = httpServer.arg(i); hMin = stringTemp.toInt();
-    }
-    if (httpServer.argName(i) == "hMax") {
-      stringTemp = httpServer.arg(i); hMax = stringTemp.toInt();
-    }
-    if (httpServer.argName(i) == "hMode1") {
-      stringTemp = httpServer.arg(i); hMode1 = stringTemp.toInt();
-    }
-    if (httpServer.argName(i) == "hMode2") {
-      stringTemp = httpServer.arg(i); hMode2 = stringTemp.toInt();
-    }
-    if (httpServer.argName(i) == "hOffset") {
-      stringTemp = httpServer.arg(i); hOffset = stringTemp.toInt();
-    }
-  }
-  configWrite();
-  delay(250);
-  handleReboot();
-  */
 }

@@ -20,9 +20,9 @@
                 <span id="vcc">%VCC%</span>&nbsp;V
             </span>
         </div>
-        <div class="dev_curHeight heightInfo"><span id="height">%HEIGHT%</span> cm</div>
-        <div class="buttonUp centerContent"><button class="btnArrow">&#129145;</button></div>
-        <div class="buttonDown centerContent"><button class="btnArrow">&#129147;</button></div>
+        <div class="dev_curHeight heightInfo text-vertical-al"><span style="float: right;"><p><span id="height">%HEIGHT%</span><span style="font-size: 50%;">cm</span></p></span></div>
+        <div class="buttonUp centerContent"><button class="btnArrow" onmousedown="moveLift(1)" onmouseup="moveLift(0)">&#129145;</button></div>
+        <div class="buttonDown centerContent"><button class="btnArrow" onmousedown="moveLift(-1)" onmouseup="moveLift(0)">&#129147;</button></div>
         <div class="dev_modes centerContent">
             <div><a href="setLiftMin"><button class="btnSelect" style="width: 40px;">&#10515;</button></a></div>
             <div><a href="setLiftMode1"><button class="btnSelect">Режим&nbsp;1</button></a></div>
@@ -34,15 +34,20 @@
 </body>
 </html>
 <script>
-    setInterval( function() {
+    setInterval(function() {
         getInfo("uptime");
         getInfo("height");
         getInfo("vcc");
         getInfo("rssi");
     }, 1000);
-    
+
+    function moveLift(val) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "/moveLift?height="+val, true);
+        xhr.send();
+    }
+
     function getInfo (page) {
-        console.log(page);
         var xhttp = new XMLHttpRequest();
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
