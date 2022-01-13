@@ -28,8 +28,9 @@ float expRunningAverage(float newVal) { // бегущее среднее
 
 byte needMove = false;
 byte needReboot = false;
-int8_t liftDirection;
-unsigned int distance = 550, getDistancePeriod = 100, hOffset = 0, hMode1 = 550, hMode2 = 655, hMin = 500, hMax = 750, hNeed = 550;
+int8_t liftDirection = 0;
+const unsigned int getDistancePeriod = 100;
+unsigned int distance = 550, hOffset = 0, hMode1 = 550, hMode2 = 655, hMin = 500, hMax = 750, hNeed = 550;
 unsigned long distanceLastTime, uptimeLastTime, snowInfoLastTime;
 
 ADC_MODE(ADC_VCC);
@@ -74,7 +75,7 @@ void setup() {
   Serial.setTimeout(0);
   Serial.println();
   Serial.println(F("Table Lift Controller (ver.3.5) loaded"));
-    Serial.print(F("\tFirmware builded: "));
+    Serial.print(F(" => Firmware builded: "));
     Serial.print(String(__DATE__)); 
     Serial.print(F(", "));
     Serial.println(String(__TIME__));
@@ -95,8 +96,8 @@ void setup() {
   WiFi.begin("Evangelion", "97910101");
   Serial.print(F("Connecting..."));
   while (WiFi.status() != WL_CONNECTED) {
-    Serial.print(F("."));
-    delay(250);
+      Serial.print(F("."));
+      delay(250);
     }
   Serial.println();
   Serial.print(F("Connected to ")); Serial.println(WiFi.SSID());
@@ -111,13 +112,12 @@ void setup() {
     request->send(LittleFS, "/config.html", "text/html", false, processor);
   });
   httpServer.on("/reboot", HTTP_GET, [](AsyncWebServerRequest *request) {
-    ESP.reset();
+    needReboot = true;
   });
   httpServer.on("/reboot.html", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(LittleFS, "/reboot.html", "text/html", false, processor);
     needReboot = true;
   });
-//  httpServer.serveStatic("/",  LittleFS, "/reboot.html");
 
   httpServer.on("/uptime", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send_P(200, "text/plain", getUptime().c_str());
@@ -141,12 +141,12 @@ void setup() {
     String param6 = request->getParam("hMode2")->value();
     String param7 = request->getParam("hOffset")->value();
     if (param1 != "") {wifiSSID = param1;}
-    if (param2 != "") {wifiPSK = param2;}
-    if (param3 != "") {hMin = param3.toInt();}
-    if (param4 != "") {hMax = param4.toInt();}
-    if (param5 != "") {hMode1 = param5.toInt();}
-    if (param6 != "") {hMode2 = param6.toInt();}
-    if (param7 != "") {hOffset = param7.toInt();}
+    if (param2 != "") {wifiPSK  = param2;}
+    if (param3 != "") {hMin     = param3.toInt();}
+    if (param4 != "") {hMax     = param4.toInt();}
+    if (param5 != "") {hMode1   = param5.toInt();}
+    if (param6 != "") {hMode2   = param6.toInt();}
+    if (param7 != "") {hOffset  = param7.toInt();}
     configWrite();
     request->redirect("/reboot.html");
     needReboot = true;
@@ -217,15 +217,12 @@ void loop() {
   }
   if (needMove == true) {
     if (hNeed > distance) {
-      //Serial.print(F("Moving up to: ")); Serial.print(String(hNeed)); Serial.print(F(", now: ")); Serial.println(String(distance));
       moveUP();
     }
     if (hNeed < distance) {
-      //Serial.print(F("Moving down to: ")); Serial.print(String(hNeed)); Serial.print(F(", now: ")); Serial.println(String(distance));
       moveDOWN();
     }
     if (hNeed == distance) {
-      //Serial.println(F("Moving stoped"));
       needMove = false;
       moveSTOP();
     }
@@ -311,7 +308,7 @@ void configRead() {
     Serial.println(F("LittleFS not exists"));
     Serial.println(F("Formating..."));
     delay(5000);
-    //LittleFS.format();
+    LittleFS.format();
     needConfig = true;
     delay(2500);
     }
